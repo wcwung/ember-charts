@@ -80,15 +80,22 @@ export default Ember.Mixin.create({
 
   numColorSeries: 1,
 
-  getSeriesColor: Ember.computed('numColorSeries', 'getColorRange', 'getColorScale', 'selectedSeedColor', function() {
+  getSeriesColor: Ember.computed('numColorSeries', 'getColorRange', 'getColorScale', 'selectedSeedColor', 'colorMap', function() {
     var numColorSeries = this.get('numColorSeries');
     var selectedSeedColor = this.get('selectedSeedColor');
+    var colorMap = this.get('colorMap');
 
     var _this = this;
     return function(d, i) {
-      var seedColor = d.color || selectedSeedColor;
+      var colorMap = _this.get('colorMap');
+      var seedColor = colorMap ? _this.get('colorMap')[d] || _this.get('colorMap')[d.label] : (d.color || selectedSeedColor);
       var colorRange = _this.get('getColorRange')(seedColor);
       var colorScale = _this.get('getColorScale')(seedColor);
+
+      if (colorMap) {
+        return seedColor;
+      }
+
       if (numColorSeries === 1) {
         return colorRange[0];
       } else {

@@ -30,14 +30,16 @@ export default Ember.Object.extend({
           var charWidth = bbW / label.length;
           var textLabelWidth = getLabelSize(d, selection) - reservedCharLength * charWidth;
           var numChars = Math.floor(textLabelWidth / charWidth);
+          // 
+          // if (numChars - 3 <= 0) {
+          //   return '...';
+          // } else if (bbW > textLabelWidth) {
+          //   return label.slice(0, numChars - 3) + '...';
+          // } else {
+          //   return label;
+          // }
 
-          if (numChars - 3 <= 0) {
-            return '...';
-          } else if (bbW > textLabelWidth) {
-            return label.slice(0, numChars - 3) + '...';
-          } else {
-            return label;
-          }
+          return label;
         });
       };
     })
