@@ -13,7 +13,9 @@ export default Ember.Mixin.create({
     if (Ember.isEmpty(data)) {
       return [];
     } else if (key != null) {
-      if (sortAscending) {
+      if (key === 'fixed') {
+        return data;
+      } else if (sortAscending) {
         return _.sortBy(data, key);
       } else {
         return _.sortBy(data, key).reverse();
