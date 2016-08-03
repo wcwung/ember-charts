@@ -12,6 +12,7 @@ export default Ember.Mixin.create({
   // # minAxisValue: The minimum value appearing on an axis using numeric values
   // # maxAxisValue: The maximum value appearing on an axis using numeric values
   // # ------------------------------------------------------------------------
+  type: null,
   graphicWidth: null,
   graphicHeight: null,
   minXTicks: 3,
@@ -92,15 +93,19 @@ export default Ember.Mixin.create({
       return Math.max(numOfTicks, this.get('minYTicks'));
     }),
 
-  formatValueAxis: Ember.computed('minAxisValue', 'maxAxisValue', function() {
+  formatValueAxis: Ember.computed('minAxisValue', 'maxAxisValue', 'type', function() {
+    // TODO: enable switch to turn this back on:
     // # Base the format prefix on largest magnitude (e.g. if we cross from
     // # hundreds of thousands into millions, use millions)
     const absMinAxisValue = Math.abs(this.get('minAxisValue'));
     const absMaxAxisValue = Math.abs(this.get('maxAxisValue'));
     const magnitude = Math.max(absMinAxisValue, absMaxAxisValue);
     const prefix = d3.formatPrefix(magnitude);
+
     return function(value) {
-      return "" + (prefix.scale(value)) + prefix.symbol;
+      if (value === 0) { return 0 };
+      // return "" + (prefix.scale(value)) + prefix.symbol;
+      return d3.format(",.2r")(value);
     };
   })
 });
