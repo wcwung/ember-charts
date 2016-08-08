@@ -53,12 +53,16 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // are rotated, they will be extended beyond labelHeight up to maxLabelHeight
   maxLabelHeight: 50,
 
+  // Scales the bars and y-axis tickers to be out of 100%
+  usePercentScale: false,
+
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
 
   sortedData: Ember.computed('data.[]', 'sortKey', 'sortAscending', 'stackBars', function() {
     var data, group, groupData, groupObj, groupedData, key, newData, sortAscending, sortedGroups, summedGroupValues, _i, _len;
+
     if (this.get('stackBars')) {
       data = this.get('data');
       groupedData = _.groupBy(data, function(d) {
@@ -109,8 +113,8 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       // actual empty array for tests to pass, and `Ember.NativeArray` adds
       // a bunch of stuff to the prototype that gets enumerated by `_.values`
       // in `individualBarLabels`
-    	return [];
-   	}
+      return [];
+     }
 
     data = groupBy(data, (d) => {
       return d.group || this.get('ungroupedSeriesName');
@@ -236,8 +240,9 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
 
   // Vertical position/length of each bar and its value
-  yDomain: Ember.computed('finishedData', 'stackBars', function() {
+  yDomain: Ember.computed('finishedData', 'stackBars', 'usePercentScale', function() {
     var finishedData = this.get('finishedData');
+    var usePercentScale = this.get('usePercentScale');
     var minOfGroups = d3.min(finishedData, function(d) {
       return _.min(d.values.map(function(dd) {
         return dd.value;
@@ -274,7 +279,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     if (max < 0) {
       return [min, 0];
     }
-    if (min === 0 && max === 0) {
+    if ((min === 0 && max === 0) || usePercentScale) {
       return [0, 1];
     } else {
       return [min, max];
@@ -292,6 +297,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var groups = _.map(_.values(this.get('groupedData')), function(g) {
       return _.pluck(g, 'label');
     });
+
     return _.uniq(_.flatten(groups));
   }),
 
@@ -389,10 +395,12 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     getSeriesColor = this.get('getSeriesColor');
     return this.get('individualBarLabels').map((label, i) => {
       var color;
+
       color = getSeriesColor(label, i);
       if (this.get('stackBars')) {
         i = this.get('labelIDMapping')[label];
       }
+
       return {
         label: label,
         fill: color,
@@ -501,7 +509,6 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   groupedBarAttrs: Ember.computed('yScale', 'getSeriesColor', 'barWidth', 'xWithinGroupScale', function() {
     var zeroDisplacement = 1;
     var yScale = this.get('yScale');
-
     return {
       class: (d, i) => "grouping-" + i,
       'stroke-width': 0,
@@ -699,19 +706,24 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   },
 
   updateAxes: function() {
+    var usePercentScale = this.get('usePercentScale');
+    var axisFormat = this.get('formatValueAxis');;
+
+    if (usePercentScale) {
+      axisFormat = d3.format('%');
+    }
     //tickSize isn't doing anything here, it should take two arguments
     var yAxis = d3.svg.axis()
       .scale(this.get('yScale'))
       .orient('right')
       .ticks(this.get('numYTicks'))
       .tickSize(this.get('graphicWidth'))
-      .tickFormat(this.get('formatValueAxis'));
+      .tickFormat(axisFormat);
 
     var gYAxis = this.get('yAxis');
 
     // find the correct size of graphicLeft in order to fit the Labels perfectly
     this.set('graphicLeft', this.maxLabelLength(gYAxis.selectAll('text')) + this.get('labelPadding') );
-
 
     var graphicTop = this.get('graphicTop');
     var graphicLeft = this.get('graphicLeft');
@@ -732,9 +744,9 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   updateGraphic: function() {
     var groups = this.get('groups');
-
     var barAttrs = this.get('stackBars') ? this.get('stackedBarAttrs') : this.get('groupedBarAttrs');
 
+    groups.attr(this.get('groupAttrs') );
     groups.attr(this.get('groupAttrs') );
     groups.selectAll('rect')
       .attr(barAttrs)
