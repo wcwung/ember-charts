@@ -125,9 +125,6 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // This could potentially be addressed with a refactor where sorting happens after
     // grouping across the board.
     // TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
-    _.each(_.keys(data), function(groupName) {
-      data[groupName] = _.sortBy(data[groupName], 'label');
-    });
 
     return data;
   }),
@@ -272,6 +269,9 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       max = maxOfGroups;
     }
 
+    if (usePercentScale) {
+      return [0, 1];
+    }
     // force one end of the range to include zero
     if (min > 0) {
       return [0, max];
@@ -279,7 +279,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     if (max < 0) {
       return [min, 0];
     }
-    if ((min === 0 && max === 0) || usePercentScale) {
+    if (min === 0 && max === 0) {
       return [0, 1];
     } else {
       return [min, max];
